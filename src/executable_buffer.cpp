@@ -93,23 +93,14 @@ unsigned long eb::execute() {
 
     this->setExecutable();
 
+    // Create a function pointer to the beginning of the buffer
+    typedef void bufferFuncPtr();
+    bufferFuncPtr* execute_buffer = (bufferFuncPtr*) this->buffer;
+
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_timespec);
 
-    #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
-        asm volatile(
-            "\t mov %%rax, %[buffer]; \n\t"
-            "\t call %%rax; \n\t"
-            :
-            : [buffer] "r" ((unsigned long) this->buffer)
-            : 
-        );
-    #else
-        cerr << "ERROR: Your architecture is not supported. However, "
-             << "you can still execute your code if you figure out how"
-             << "to write the appropriate assembly code to branch to "
-             << "the beginning of your ExecutableBuffer." << endl;
-        exit(1);
-    #endif
+    // Branch to the beginning of the buffer using the pointer we created
+    execute_buffer();
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_timespec);
 
