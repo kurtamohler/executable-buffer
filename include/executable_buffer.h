@@ -48,7 +48,8 @@ public:
     //   to be multiples of the system's page size.
     //
     // Arguments:
-    //   length - the desired length (bytes) of the buffer
+    //   length - the desired length (number of elements of
+    //            type T) for the buffer
     //
     ExecutableBuffer(size_t length);
 
@@ -59,7 +60,9 @@ public:
     // Details:
     //   munmap is called to destroy the buffer.
     //   
-    ~ExecutableBuffer();
+    ~ExecutableBuffer(){
+        munmap(this->buffer, this->alloc_length_bytes);
+    }
 
     ////////////////////////////////////////////////////////
     //
@@ -67,7 +70,9 @@ public:
     //
     // Returns: Length (bytes) of allocated buffer.
     //
-    size_t getAllocLength();
+    size_t getAllocLength() {
+        return this->alloc_length_bytes;
+    }
 
     ////////////////////////////////////////////////////////
     //
@@ -96,15 +101,43 @@ public:
     //
     // Returns: Pointer to the beginning of the buffer
     //
-    void* const begin();
+    T* const begin(){
+        return (T* const) this->buffer;
+    }
 
+
+    ////////////////////////////////////////////////////////
+    //
+    // Element getter
+    //
+    // Arguments:
+    //   ind - the index of the element
+    //
+    // Returns: Value of element at specified index
+    //
+    T operator[](int ind) const {
+        return this->buffer[ind];
+    }
+
+    ////////////////////////////////////////////////////////
+    //
+    // Element setter
+    //
+    // Arguments:
+    //   ind - the index of the element
+    //
+    // Returns: Reference to element at specified index
+    //
+    T& operator[](int ind) {
+        return this->buffer[ind];
+    }
 
 private:
     int setProtection(int prot);
     void flushCache();
 
     size_t alloc_length_bytes;
-    void* buffer;
+    T* buffer;
     bool executable;
 };
 
@@ -130,7 +163,7 @@ ExecutableBuffer<T>::ExecutableBuffer(size_t length) :
     }
 
     // Create read/write-able buffer
-    this->buffer = mmap(
+    void* buffer = mmap(
         NULL,
         this->alloc_length_bytes,
         PROT_READ | PROT_WRITE,
@@ -139,20 +172,12 @@ ExecutableBuffer<T>::ExecutableBuffer(size_t length) :
         0
     );
 
-    if (this->buffer == (caddr_t) -1) {
+    if (buffer == (caddr_t) -1) {
         cerr << "ERROR: could not allocate buffer with mmap" << endl;
         exit(1);
     }
-}
 
-template <class T>
-ExecutableBuffer<T>::~ExecutableBuffer() {
-    munmap(this->buffer, this->alloc_length_bytes);
-}
-
-template <class T>
-size_t ExecutableBuffer<T>::getAllocLength() {
-    return this->alloc_length_bytes;
+    this->buffer = (T*) buffer;
 }
 
 template <class T>
@@ -228,11 +253,5 @@ void ExecutableBuffer<T>::flushCache() {
         (char*) this->buffer+this->alloc_length_bytes-1
     );
 }
-
-template <class T>
-void* const ExecutableBuffer<T>::begin() {
-    return this->buffer;
-}
-
 
 #endif // #ifndef __EXECUTABLE_BUFFER_H__
