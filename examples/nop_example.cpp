@@ -5,7 +5,7 @@ using namespace std;
 
 int main() {
     const size_t buffer_size = 100000000;
-    ExecutableBuffer eb(buffer_size);
+    ExecutableBuffer<unsigned char> eb(buffer_size);
 
     unsigned char* buffer = (unsigned char*) eb.begin();
     unsigned char NOP = 0x90;
