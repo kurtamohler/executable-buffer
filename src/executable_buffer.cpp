@@ -1,10 +1,11 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <iostream>
-// #include <asm/cachectl.h>
+#include <time.h>
 #include "executable_buffer.h"
 
 using namespace std;
+
 typedef ExecutableBuffer eb;
 
 eb::ExecutableBuffer(size_t length) :
@@ -34,8 +35,6 @@ eb::ExecutableBuffer(size_t length) :
         -1,
         0
     );
-
-    // cout << "0x" << hex << (unsigned long) this->buffer << endl;
 
     if (this->buffer == (caddr_t) -1) {
         cerr << "ERROR: could not allocate buffer with mmap" << endl;
@@ -90,14 +89,16 @@ void eb::setWritable() {
 }
 
 unsigned long eb::execute() {
+    timespec start_timespec, end_timespec;
+
     this->setExecutable();
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_timespec);
 
     #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
         asm volatile(
             "\t mov %%rax, %[buffer]; \n\t"
             "\t call %%rax; \n\t"
-            "\t END_LABEL: \n\t"
-            "\t nop; \n\t"
             :
             : [buffer] "r" ((unsigned long) this->buffer)
             : 
@@ -107,16 +108,20 @@ unsigned long eb::execute() {
              << "you can still execute your code if you figure out how"
              << "to write the appropriate assembly code to branch to "
              << "the beginning of your ExecutableBuffer." << endl;
+        exit(1);
     #endif
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_timespec);
+
+    unsigned long start_ns, end_ns;
+
+    start_ns = (1000000000 * start_timespec.tv_sec) + start_timespec.tv_nsec;
+    end_ns = (1000000000 * end_timespec.tv_sec) + end_timespec.tv_nsec;
+
+    return (end_ns - start_ns);
 }
 
 void eb::flushCache() {
-    // return cacheflush(
-    //     this->buffer,
-    //     this->alloc_length,
-    //     BCACHE
-    // );
-
     __builtin___clear_cache(
         (char*) this->buffer,
         (char*) this->buffer+this->alloc_length-1
