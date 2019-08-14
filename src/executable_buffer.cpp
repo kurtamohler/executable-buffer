@@ -7,7 +7,9 @@
 using namespace std;
 typedef ExecutableBuffer eb;
 
-eb::ExecutableBuffer(size_t length) {
+eb::ExecutableBuffer(size_t length) :
+    executable(false)
+{
     if (length == 0) {
         length++;
     }
@@ -58,25 +60,54 @@ int eb::setProtection(int prot) {
 }
 
 void eb::setExecutable() {
-    int ret = this->setProtection(PROT_READ | PROT_EXEC);
+    if (!this->executable) {
+        int ret = this->setProtection(PROT_READ | PROT_EXEC);
 
-    if (ret == -1) {
-        cerr << "ERROR: could not set buffer to be executable" << endl;
-        exit(1);
+        if (ret == -1) {
+            cerr << "ERROR: could not set buffer to be executable" << endl;
+            exit(1);
+        }
+        
+        this->flushCache();
+
+        this->executable = true;
     }
-    
-    this->flushCache();
 }
 
 void eb::setWritable() {
-    int ret = this->setProtection(PROT_READ | PROT_WRITE);
+    if (this->executable) {
+        int ret = this->setProtection(PROT_READ | PROT_WRITE);
 
-    if (ret == -1) {
-        cerr << "ERROR: could not set buffer to be executable" << endl;
-        exit(1);
+        if (ret == -1) {
+            cerr << "ERROR: could not set buffer to be executable" << endl;
+            exit(1);
+        }
+
+        this->flushCache();
+
+        this->executable = false;
     }
+}
 
-    this->flushCache();
+unsigned long eb::execute() {
+    this->setExecutable();
+
+    #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+        asm volatile(
+            "\t mov %%rax, %[buffer]; \n\t"
+            "\t call %%rax; \n\t"
+            "\t END_LABEL: \n\t"
+            "\t nop; \n\t"
+            :
+            : [buffer] "r" ((unsigned long) this->buffer)
+            : 
+        );
+    #else
+        cerr << "ERROR: Your architecture is not supported. However, "
+             << "you can still execute your code if you figure out how"
+             << "to write the appropriate assembly code to branch to "
+             << "the beginning of your ExecutableBuffer." << endl;
+    #endif
 }
 
 void eb::flushCache() {

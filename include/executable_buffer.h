@@ -76,6 +76,15 @@ public:
     //
     void setWritable();
 
+
+    ////////////////////////////////////////////////////////
+    //
+    // Execute the code in the buffer
+    //
+    // Returns: Time (nanoseconds) taken to run the code
+    //
+    unsigned long execute();
+
     ////////////////////////////////////////////////////////
     //
     // Get a pointer to the buffer
@@ -90,6 +99,7 @@ private:
 
     size_t alloc_length;
     void* buffer;
+    bool executable;
 };
 
 
