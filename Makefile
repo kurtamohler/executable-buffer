@@ -1,6 +1,5 @@
 INCLUDE=-I include
 BUILD=build
-OBJ=$(BUILD)/executable_buffer.o
 
 TARGETS=$(BUILD)/nop_example
 FLAGS=-g -fPIC -static
