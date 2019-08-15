@@ -1,27 +1,25 @@
-/**
-
-ExecutableBuffer class
-
-ExecutableBuffer provides a buffer that can be toggled
-between executable mode and writable mode. This provides
-the ablity to generate and then execute machine code at
-runtime.
-
-
-Supported environments:
-    * Linux
-
-
-Implementation details:
-
-    mmap() is used to allocate the buffer to ensure that
-    memory regions used by other parts of the application
-    are not affected when toggling between memory protection
-    modes.
-
-    mprotect() is used to toggle memory protection modes.
-
-**/
+//////////////////////////////////////////////////////////////////////
+//
+// ExecutableBuffer class
+//
+// ExecutableBuffer provides a buffer that can be toggled between
+// executable mode and writable mode. This provides the ablity to
+// generate and then execute machine code at runtime.
+//
+//
+// Supported environments:
+//   * Linux
+//
+//
+// Implementation details:
+//
+//   mmap() is used to allocate the buffer to ensure that memory
+//   regions used by other parts of the application are not
+//   affected when toggling between memory protection modes.
+//
+//   mprotect() is used to toggle memory protection modes.
+//
+//////////////////////////////////////////////////////////////////////
 
 
 #ifndef __EXECUTABLE_BUFFER_H__
