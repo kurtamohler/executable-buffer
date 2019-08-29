@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <time.h>
+#include <vector>
 using namespace std;
 
 template <class T>
@@ -129,6 +130,11 @@ public:
     T& operator[](int ind) {
         return this->buffer[ind];
     }
+
+    ////////////////////////////////////////////////////////
+    //
+    // 
+    void copyVector(vector<T> v, int ind);
 
 private:
     int setProtection(int prot);
@@ -250,6 +256,14 @@ void ExecutableBuffer<T>::flushCache() {
         (char*) this->buffer,
         (char*) this->buffer+this->alloc_length_bytes-1
     );
+}
+
+
+template <class T>
+void ExecutableBuffer<T>::copyVector(vector<T> v, int ind) {
+    for (int i = 0; i < v.size(); i++) {
+        this->buffer[ind+i] = v[i];
+    }
 }
 
 #endif // #ifndef __EXECUTABLE_BUFFER_H__
