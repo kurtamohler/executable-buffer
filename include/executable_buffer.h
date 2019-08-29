@@ -94,6 +94,18 @@ public:
     //
     unsigned long execute();
 
+
+    ////////////////////////////////////////////////////////
+    //
+    // Fill every position of the buffer with a particular
+    // value
+    //
+    // Arguments:
+    //   val - value to fill buffer with
+    //
+    void fill(T val);
+
+
     ////////////////////////////////////////////////////////
     //
     // Get a pointer to the buffer
@@ -118,6 +130,7 @@ public:
         return this->buffer[ind];
     }
 
+
     ////////////////////////////////////////////////////////
     //
     // Element setter
@@ -131,10 +144,19 @@ public:
         return this->buffer[ind];
     }
 
+
     ////////////////////////////////////////////////////////
     //
-    // 
+    // Copy each element of a vector into the buffer
+    //
+    // Arguments:
+    //   v - the vector to copy from
+    //   ind - the index into the buffer to copy to
+    //
     void copyVector(vector<T> v, int ind);
+
+    // Length of the buffer, by number of type T
+    const size_t length;
 
 private:
     int setProtection(int prot);
@@ -147,7 +169,8 @@ private:
 
 template <class T>
 ExecutableBuffer<T>::ExecutableBuffer(size_t length) :
-    executable(false)
+    executable(false),
+    length(length)
 {
     if (length == 0) {
         length++;
@@ -251,13 +274,19 @@ unsigned long ExecutableBuffer<T>::execute() {
 }
 
 template <class T>
+void ExecutableBuffer<T>::fill(T val) {
+    for (size_t i = 0; i < this->length; i++) {
+        this->buffer[i] = val;
+    }
+}
+
+template <class T>
 void ExecutableBuffer<T>::flushCache() {
     __builtin___clear_cache(
         (char*) this->buffer,
         (char*) this->buffer+this->alloc_length_bytes-1
     );
 }
-
 
 template <class T>
 void ExecutableBuffer<T>::copyVector(vector<T> v, int ind) {
